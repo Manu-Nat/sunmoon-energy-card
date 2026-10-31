@@ -1,9 +1,9 @@
 /*!
- * Sunmoon Energy  v1.0.6
+ * Sunmoon Energy  v1.0.7
  * Card Lovelace custom per Home Assistant: sole, traliccio, casa e flussi energetici animati.
  * Configurabile interamente da editor grafico.
  */
-const NEXUS_VERSION = '1.0.6';
+const NEXUS_VERSION = '1.0.7';
 
 const NEXUS_DEFAULTS = {
   solar_power: '',
@@ -683,10 +683,10 @@ class NexusSolarCard extends HTMLElement {
     const hubX = (hubOnWall ? hubWallPos[0] : 500) + num('hub_x'), hubY = (hubOnWall ? hubWallPos[1] : (X ? 445 : 455)) + num('hub_y');
     const hubP = (lx, ly) => [hubX + lx * hubS, hubY + ly * hubS + lx * hubS * hubSkew];
     const hubPorts = hubStyle === 'reactor'
-      ? { top: hubP(0, -44), left: hubP(-44, 0), right: hubP(44, 0), bl: hubP(-26, 36), br: hubP(26, 36) }
+      ? { top: hubP(0, -44), left: hubP(-44, 0), right: hubP(44, 0), bl: hubP(-26, 36), br: hubP(26, 36), bot: hubP(0, 44) }
       : hubImg
-        ? { top: hubP(0, -64), left: hubP(-64, 0), right: hubP(64, 0), bl: hubP(-40, 60), br: hubP(40, 60) }
-        : { top: hubP(0, -48), left: hubP(-48, 0), right: hubP(60, 0), bl: hubP(-24, 44), br: hubP(24, 44) };
+        ? { top: hubP(0, -64), left: hubP(-64, 0), right: hubP(64, 0), bl: hubP(-40, 60), br: hubP(40, 60), bot: hubP(0, 64) }
+        : { top: hubP(0, -48), left: hubP(-48, 0), right: hubP(60, 0), bl: hubP(-24, 44), br: hubP(24, 44), bot: hubP(0, 44) };
 
     const gridStart = gp(188, 150);
     const gridEnd = gh(20, 150);
@@ -699,13 +699,13 @@ class NexusSolarCard extends HTMLElement {
     const panR = hl(0.834, 0.225, 129.5);                    // ultimo pannello a destra
     const eaveGap = hl(1, 0.5, 108);                         // gronda, nello spazio tra le 2 finestre
     const frontPt = gh(107, 252);                            // davanti alla casa, sotto lo spigolo
-    const corner = hl(1, 0.02, 26);                          // spigolo tra parete destra e facciata
-    const homeEnd = hubOnWall ? hl(0.82, 0, 33) : gridEnd;   // bordo destro della porta (consumo casa)
+    const cornerX = hl(1, 0, 0)[0];                          // spigolo verticale tra facciata e parete destra
+    const homeEnd = hubOnWall ? hl(1.03, -0.06, 102) : gridEnd;   // angolo dei led sottotetto, sopra lo spigolo
     const homeStart = hubOnWall ? hubPorts.left : hubPorts.right;
     const boltPath = (pts0, amp) => {
       const pts = pts0.filter((q, i) => i === 0 || Math.hypot(q[0] - pts0[i - 1][0], q[1] - pts0[i - 1][1]) > 2);
       return pts.slice(1).map((q, i) => {
-      const sg = bolt(pts[i], q, amp);
+      const sg = bolt(pts[i], q, Array.isArray(amp) ? (amp[i] ?? amp[amp.length - 1]) : amp);
       return i ? sg.replace(/^M[^L]+/, '') : sg;
       }).join('');
     };
@@ -759,11 +759,12 @@ class NexusSolarCard extends HTMLElement {
         const main = mixSrc.reduce((a, x) => (x[2] > a[2] ? x : a), mixSrc[0]);
         const hasImp = mixSrc.some((x) => x[0] === 'imp');
         const cls = hasImp ? 'nx-grid-import' : mixSrc.every((x) => x[0] === 'bat') ? 'nx-bolt-bat' : 'nx-bolt-pv';
-        addHub(flow(hubOnWall ? boltPath([homeStart, corner, homeEnd], hasImp ? 7 : 5) : bolt(homeStart, homeEnd, hasImp ? 7 : 5), multi ? 'url(#nx-flow-mix)' : mixSrc[0][1], cls, homeEnd, hasImp, multi ? main[1] : null));
+        addHub(flow(hubOnWall ? boltPath([homeStart, [cornerX, homeStart[1] + (homeStart[0] - cornerX) * 0.357], homeEnd], hasImp ? 7 : 5) : bolt(homeStart, homeEnd, hasImp ? 7 : 5), multi ? 'url(#nx-flow-mix)' : mixSrc[0][1], cls, homeEnd, hasImp, multi ? main[1] : null));
       }
-      const gRoute = hubOnWall ? [gridStart, frontPt, hl(1, bHub - 0.1, 0), hubPorts.bl] : [gridStart, hubPorts.left];
-      if (importing) addHub(flow(boltPath(gRoute, 9), importColor, 'nx-grid-import', gRoute[gRoute.length - 1], true));
-      if (exporting) addHub(flow(boltPath([...gRoute].reverse(), 9), exportColor, 'nx-grid-export', gridStart, true));
+      const gRoute = hubOnWall ? [gridStart, [hubPorts.bot[0], hubPorts.bot[1] + 26], hubPorts.bot] : [gridStart, hubPorts.left];
+      const gAmp = hubOnWall ? [9, 2.5] : 9;
+      if (importing) addHub(flow(boltPath(gRoute, gAmp), importColor, 'nx-grid-import', gRoute[gRoute.length - 1], true));
+      if (exporting) addHub(flow(boltPath([...gRoute].reverse(), Array.isArray(gAmp) ? [...gAmp].reverse() : gAmp), exportColor, 'nx-grid-export', gridStart, true));
     }
     if (hasBatt && charging) addHub(flow(boltPath(bRoute, 6), battColor, 'nx-bolt-bat', battEnd, false));
     if (hasBatt && discharging) addHub(flow(boltPath([...bRoute].reverse(), 6), battColor, 'nx-bolt-bat', jBatt, false));
