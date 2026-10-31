@@ -1,9 +1,9 @@
 /*!
- * Sunmoon Energy  v1.0.0
+ * Sunmoon Energy  v1.0.4
  * Card Lovelace custom per Home Assistant: sole, traliccio, casa e flussi energetici animati.
  * Configurabile interamente da editor grafico.
  */
-const NEXUS_VERSION = '1.0.0';
+const NEXUS_VERSION = '1.0.4';
 
 const NEXUS_DEFAULTS = {
   solar_power: '',
@@ -41,7 +41,6 @@ const NEXUS_DEFAULTS = {
   hub_scale: 1, hub_x: 0, hub_y: 0,
   pv_color: '#FFD34E',
   import_color: '#FF304F',
-  export_color: '#A6FF00',
   home_color: '#55F4FF',
   sun_scale: 1, sun_x: 0, sun_y: 0,
   pylon_scale: 1, pylon_x: 0, pylon_y: 0,
@@ -51,7 +50,7 @@ const NEXUS_DEFAULTS = {
   home_box_scale: 1, home_box_value_scale: 1, home_box_x: 0, home_box_y: 0,
 };
 
-const NEXUS_COLOR_KEYS = ['pv_color', 'import_color', 'export_color', 'home_color', 'battery_color', 'car_color'];
+const NEXUS_COLOR_KEYS = ['pv_color', 'import_color', 'home_color', 'battery_color', 'car_color'];
 
 const nxToRgb = (h) => {
   const m = /^#?([0-9a-f]{6})$/i.exec(h || '');
@@ -566,7 +565,7 @@ class NexusSolarCard extends HTMLElement {
 
     const pvColor = col('pv_color');
     const importColor = col('import_color');
-    const exportColor = col('export_color');
+    const exportColor = pvColor;                      // l'immissione prende il colore della produzione
     const homeColor = col('home_color');
 
     /* valori */
@@ -639,7 +638,7 @@ class NexusSolarCard extends HTMLElement {
     /* geometrie con scala e offset */
     const ss = sc('sun_scale'), sx = 500 + num('sun_x'), sy = 245 + num('sun_y');
     const ts = sc('pylon_scale') * (X ? 0.88 : 1), px = (X ? 150 : 180) + num('pylon_x'), py = (X ? 488 : 524) + num('pylon_y');
-    const hs = sc('house_scale') * (X ? 0.88 : 1), hx = (X ? 878 : 871) + num('house_x'), hy = (X ? 470 : 494) + num('house_y');
+    const hs = sc('house_scale') * 1.3 * (X ? 0.88 : 1), hx = (X ? 856 : 849) + num('house_x'), hy = (X ? 470 : 494) + num('house_y');
     const gp = (lx, ly) => [px + (lx - 106) * ts, py + (ly - 289) * ts];
     const gh = (lx, ly) => [hx + (lx - 107) * hs, hy + (ly - 229) * hs];
     const bsc = sc('battery_scale') * 0.95, bx = 642 + num('battery_x'), by = 582 + num('battery_y');
@@ -663,10 +662,16 @@ class NexusSolarCard extends HTMLElement {
       return d;
     };
 
-    const hubS = Math.max(0.2, num('hub_scale'));
     const hubStyle = ['inverter', 'reactor', 'direct'].includes(c.hub_style) ? c.hub_style : 'inverter';
-    const hubX = 500 + num('hub_x'), hubY = (X ? 445 : 455) + num('hub_y');
-    const hubP = (lx, ly) => [hubX + lx * hubS, hubY + ly * hubS];
+    /* il nodo (inverter) sta sulla parete destra della casa, sotto le 2 finestre; con un'immagine personalizzata
+       della casa, o nello stile "direct", resta al centro come prima */
+    const hubOnWall = !houseImg && hubStyle !== 'direct';
+    const wallC = gh(148, 190);                                   // centro della parete destra, sotto le finestre
+    const hubS = Math.max(0.2, num('hub_scale')) * (hubOnWall ? 0.62 * sc('house_scale') * (X ? 0.88 : 1) : 1);
+    const hubSkew = hubOnWall && hubStyle === 'inverter' ? -30 / 84 : 0;   // stessa inclinazione della parete
+    const hubSkewDeg = (Math.atan(hubSkew) * 180 / Math.PI).toFixed(2);
+    const hubX = (hubOnWall ? wallC[0] : 500) + num('hub_x'), hubY = (hubOnWall ? wallC[1] : (X ? 445 : 455)) + num('hub_y');
+    const hubP = (lx, ly) => [hubX + lx * hubS, hubY + ly * hubS + lx * hubS * hubSkew];
     const hubImg = hubStyle === 'inverter' ? String(c.hub_image || '').trim().replace(/["<>]/g, '') : '';
     const hubPorts = hubStyle === 'reactor'
       ? { top: hubP(0, -44), left: hubP(-44, 0), right: hubP(44, 0), bl: hubP(-26, 36), br: hubP(26, 36) }
@@ -678,12 +683,28 @@ class NexusSolarCard extends HTMLElement {
     const gridEnd = gh(20, 150);
     const pvEnd = gh(16, 100);
 
+    /* punti sulla casa disegnata (stessa proiezione di pj): pannelli sul tetto e parete destra sotto le 2 finestre.
+       Con un'immagine personalizzata della casa non sono noti, quindi si resta sul comportamento precedente */
+    const useGeo = !houseImg;
+    const hl = (a, b, z) => gh(22 + 84 * (a + b), 199 + 30 * a - 30 * b - z);
+    const panSrc = hl(0.166, 0.225, 129.5);                  // primo pannello a sinistra, da cui parte la produzione
+    const panR = hl(0.834, 0.225, 129.5);                    // ultimo pannello a destra
+    const eaveGap = hl(1, 0.5, 108);                         // gronda, nello spazio tra le 2 finestre
+    const wallBaseL = hl(1, 0.3, 0);                         // base della parete, a sinistra dell'inverter
+    const frontPt = gh(107, 252);                            // davanti alla casa, sotto lo spigolo
+    const homeEnd = hubOnWall ? hl(1, 0.97, 30) : gridEnd;   // spigolo destro della parete
+    const boltPath = (pts, amp) => pts.slice(1).map((q, i) => {
+      const sg = bolt(pts[i], q, amp);
+      return i ? sg.replace(/^M[^L]+/, '') : sg;
+    }).join('');
+
     const fromSun = (t) => {
       const dx = t[0] - sx, dy = t[1] - sy;
       const l = Math.hypot(dx, dy) || 1;
       const r = 62 * ss + 4;
       return [sx + (dx / l) * r, sy + (dy / l) * r];
     };
+    const pvFrom = (t) => (useGeo ? panSrc : fromSun(t));
     const sh = (a, b, s) => {
       const dx = b[0] - a[0], dy = b[1] - a[1];
       const l = Math.hypot(dx, dy) || 1;
@@ -691,11 +712,11 @@ class NexusSolarCard extends HTMLElement {
       return [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny]];
     };
 
-    const flow = (d, color, cls, end, pulse) => `
+    const flow = (d, color, cls, end, pulse, coreBase) => `
       <g class="nx-bolt ${cls}">
         <path class="nx-bolt-halo" d="${d}" stroke="${color}" stroke-width="22"/>
         <path class="nx-bolt-mid" d="${d}" stroke="${color}" stroke-width="6"/>
-        <path class="nx-bolt-white" d="${d}" stroke="${nxMix(color, 0.85)}" stroke-width="2"/>
+        <path class="nx-bolt-white" d="${d}" stroke="${nxMix(coreBase || color, 0.85)}" stroke-width="2"/>
         ${pulse ? `<path class="nx-electric-pulse" d="${d}" stroke="#FFFFFF" stroke-width="3"/>` : ''}
         <circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="6" fill="#FFFFFF" filter="url(#nx-glow)"/>
       </g>`;
@@ -705,32 +726,35 @@ class NexusSolarCard extends HTMLElement {
     const pvHome = pv ? Math.max(0, pvW - expW) : 0;
     const pvOnHome = pvHome > 10;
 
-    let flows = '';
+    let flows = '', flowsTop = '';                       // flowsTop: disegnati sopra la casa
+    const addTop = (f) => { if (useGeo) flowsTop += f; else flows += f; };
+    const addHub = hubOnWall ? addTop : (f) => { flows += f; };
     const battTop = battImg ? gb(0, -66) : gb(7, -57);
     const wallTop = carImg ? gcar(-40, -80) : gcar(-137, -56);
     const jBatt = hubStyle === 'direct' ? gh(30, 205) : hubPorts.br;
     const jCar = hubStyle === 'direct' ? gh(26, 200) : hubPorts.bl;
+    const bRoute = hubOnWall ? [jBatt, frontPt, battTop] : [jBatt, battTop];
+    const cRoute = hubOnWall ? [jCar, frontPt, wallTop] : [jCar, wallTop];
     if (hubStyle === 'direct') {
-      if (pvOnHome) flows += flow(bolt(fromSun(pvEnd), pvEnd, 5), pvColor, 'nx-bolt-pv', pvEnd, false);
-      if (exporting) flows += flow(bolt(fromSun(gridStart), gridStart, 9), exportColor, 'nx-grid-export', gridStart, true);
+      if (pvOnHome) addTop(flow(bolt(pvFrom(pvEnd), pvEnd, 5), pvColor, 'nx-bolt-pv', pvEnd, false));
+      if (exporting) addTop(flow(bolt(pvFrom(gridStart), gridStart, 9), exportColor, 'nx-grid-export', gridStart, true));
       if (importing) flows += flow(bolt(gridStart, gridEnd, 9), importColor, 'nx-grid-import', gridEnd, true);
     } else {
-      if (pv) flows += flow(bolt(fromSun(hubPorts.top), hubPorts.top, 5), pvColor, 'nx-bolt-pv', hubPorts.top, false);
+      if (pv) addHub(flow(hubOnWall ? boltPath([panR, eaveGap, hubPorts.top], 5) : bolt(pvFrom(hubPorts.top), hubPorts.top, 5), pvColor, 'nx-bolt-pv', hubPorts.top, false));
       if ((homeW > 10 || home === null) && mixSrc.length) {
-        const n = mixSrc.length;
-        mixSrc.forEach((x, i) => {
-          const off = (i - (n - 1) / 2) * 12;
-          const [a1, b1] = n > 1 ? sh(hubPorts.right, gridEnd, off) : [hubPorts.right, gridEnd];
-          const cls = x[0] === 'pv' ? 'nx-bolt-pv' : x[0] === 'bat' ? 'nx-bolt-bat' : 'nx-grid-import';
-          flows += flow(bolt(a1, b1, x[0] === 'imp' ? 7 : 5), x[1], cls, b1, x[0] === 'imp');
-        });
+        const multi = mixSrc.length > 1;
+        const main = mixSrc.reduce((a, x) => (x[2] > a[2] ? x : a), mixSrc[0]);
+        const hasImp = mixSrc.some((x) => x[0] === 'imp');
+        const cls = hasImp ? 'nx-grid-import' : mixSrc.every((x) => x[0] === 'bat') ? 'nx-bolt-bat' : 'nx-bolt-pv';
+        addHub(flow(bolt(hubPorts.right, homeEnd, hasImp ? 7 : 5), multi ? 'url(#nx-flow-mix)' : mixSrc[0][1], cls, homeEnd, hasImp, multi ? main[1] : null));
       }
-      if (importing) flows += flow(bolt(gridStart, hubPorts.left, 9), importColor, 'nx-grid-import', hubPorts.left, true);
-      if (exporting) flows += flow(bolt(hubPorts.left, gridStart, 9), exportColor, 'nx-grid-export', gridStart, true);
+      const gRoute = hubOnWall ? [gridStart, frontPt, wallBaseL, hubPorts.left] : [gridStart, hubPorts.left];
+      if (importing) addHub(flow(boltPath(gRoute, 9), importColor, 'nx-grid-import', hubPorts.left, true));
+      if (exporting) addHub(flow(boltPath([...gRoute].reverse(), 9), exportColor, 'nx-grid-export', gridStart, true));
     }
-    if (hasBatt && charging) flows += flow(bolt(jBatt, battTop, 6), battColor, 'nx-bolt-bat', battTop, false);
-    if (hasBatt && discharging) flows += flow(bolt(battTop, jBatt, 6), battColor, 'nx-bolt-bat', jBatt, false);
-    if (hasCar && carCharging) flows += flow(bolt(jCar, wallTop, 6), carColor, 'nx-bolt-car', wallTop, false);
+    if (hasBatt && charging) addHub(flow(boltPath(bRoute, 6), battColor, 'nx-bolt-bat', battTop, false));
+    if (hasBatt && discharging) addHub(flow(boltPath([...bRoute].reverse(), 6), battColor, 'nx-bolt-bat', jBatt, false));
+    if (hasCar && carCharging) addHub(flow(boltPath(cRoute, 6), carColor, 'nx-bolt-car', wallTop, false));
 
     /* nodo centrale */
     const hubActive = pv || importing || exporting;
@@ -747,7 +771,7 @@ class NexusSolarCard extends HTMLElement {
         <text x="0" y="${y + 34}" text-anchor="middle" fill="#7F97B0" font-size="8" font-weight="800" letter-spacing="2">${hubLabel}</text>`;
 
     if (hubStyle === 'inverter' && hubImg) {
-      hubMarkup = `<g transform="translate(${hubX} ${hubY}) scale(${hubS})">
+      hubMarkup = `<g transform="translate(${hubX} ${hubY}) skewY(${hubSkewDeg}) scale(${hubS})">
         <ellipse cx="0" cy="62" rx="78" ry="12" fill="${hubColor}" opacity="${hubActive ? 0.3 : 0.06}" filter="url(#nx-blur)"/>
         <image href="${hubImg}" x="-64" y="-64" width="128" height="128" preserveAspectRatio="xMidYMid meet"/>
         ${pill(70)}
@@ -755,7 +779,7 @@ class NexusSolarCard extends HTMLElement {
     } else if (hubStyle === 'inverter') {
       const bar = Math.round(hubLevel * 56);
       const dim = hubActive ? hubColor : '#4C7690';
-      hubMarkup = `<g transform="translate(${hubX} ${hubY}) scale(${hubS})">
+      hubMarkup = `<g transform="translate(${hubX} ${hubY}) skewY(${hubSkewDeg}) scale(${hubS})">
         <ellipse cx="6" cy="56" rx="82" ry="12" fill="${hubColor}" opacity="${hubActive ? 0.3 : 0.06}" filter="url(#nx-blur)"/>
         <path d="M46 -42L60 -49V34L46 42Z" fill="#0A1626" stroke="${dim}" stroke-opacity=".7"/>
         <path d="M-46 -42L-32 -49H60L46 -42Z" fill="#2C4C6C" stroke="#7FD9F0" stroke-opacity=".6"/>
@@ -772,7 +796,7 @@ class NexusSolarCard extends HTMLElement {
         <path d="M-32 33H36 M-32 36H36 M-32 39H36" stroke="#27455F" stroke-width="1.2"/>
       </g>`;
     } else if (hubStyle === 'reactor') {
-      hubMarkup = `<g transform="translate(${hubX} ${hubY}) scale(${hubS})" class="${hubActive ? 'nx-hub-on' : 'nx-hub-off'}">
+      hubMarkup = `<g transform="translate(${hubX} ${hubY}) skewY(${hubSkewDeg}) scale(${hubS})" class="${hubActive ? 'nx-hub-on' : 'nx-hub-off'}">
         <circle r="70" fill="url(#nx-hub-aura)" opacity="${hubActive ? 1 : 0.2}" filter="url(#nx-big-glow)" class="nx-hub-aura"/>
         <circle r="38" fill="#050C18" stroke="${hubColor}" stroke-width="2.5" stroke-opacity=".9"/>
         <circle r="44" fill="none" stroke="${hubColor}" stroke-width="4" stroke-dasharray="26 10 6 10" stroke-linecap="round" opacity="${hubActive ? 0.95 : 0.3}" filter="url(#nx-glow)" class="nx-hub-ring"/>
@@ -1077,6 +1101,7 @@ class NexusSolarCard extends HTMLElement {
           <stop offset=".55" stop-color="#0a1226" stop-opacity="0"/><stop offset="1" stop-color="#0a1226" stop-opacity=".5"/>
         </radialGradient>
         <linearGradient id="nx-roof-mix" x1="0" y1="0" x2="1" y2="0">${mixStops}</linearGradient>
+        <linearGradient id="nx-flow-mix" gradientUnits="userSpaceOnUse" x1="${hubPorts.right[0].toFixed(1)}" y1="${hubPorts.right[1].toFixed(1)}" x2="${homeEnd[0].toFixed(1)}" y2="${homeEnd[1].toFixed(1)}">${mixStops}</linearGradient>
         <linearGradient id="nx-car-body" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="#31608A"/><stop offset=".55" stop-color="#16314D"/><stop offset="1" stop-color="#0A1829"/>
         </linearGradient>
@@ -1224,11 +1249,13 @@ class NexusSolarCard extends HTMLElement {
       <!-- FLUSSI -->
       ${flows}
 
-      ${hubMarkup}
+      ${hubOnWall ? '' : hubMarkup}
 
       <!-- CASA -->
       ${houseImgMarkup}
       <g ${houseImg ? 'display="none"' : ''} transform="translate(${hx} ${hy}) scale(${hs}) translate(-107 -229)">${houseDrawn}</g>
+      ${hubOnWall ? hubMarkup : ''}
+      ${flowsTop}
 
       ${batteryMarkup}
       ${carMarkup}
@@ -1310,7 +1337,6 @@ const NX_LABELS = {
   hub_scale: 'Nodo: scala', hub_x: 'Nodo: X', hub_y: 'Nodo: Y',
   pv_color: 'Flusso solare',
   import_color: 'Flusso prelievo dalla rete',
-  export_color: 'Flusso immissione in rete',
   home_color: 'Colore casa / consumo',
   sun_scale: 'Sole: scala', sun_x: 'Sole: X', sun_y: 'Sole: Y',
   pylon_scale: 'Traliccio: scala', pylon_x: 'Traliccio: X', pylon_y: 'Traliccio: Y',
@@ -1356,7 +1382,6 @@ const NX_SCHEMA = [
       { type: 'grid', name: '', column_min_width: '140px', schema: [
         { name: 'pv_color', selector: { color_rgb: {} } },
         { name: 'import_color', selector: { color_rgb: {} } },
-        { name: 'export_color', selector: { color_rgb: {} } },
         { name: 'battery_color', selector: { color_rgb: {} } },
         { name: 'car_color', selector: { color_rgb: {} } },
         { name: 'home_color', selector: { color_rgb: {} } },
@@ -1473,7 +1498,13 @@ class NexusSolarCardEditor extends HTMLElement {
   }
 }
 
-if (!customElements.get('sunmoon-energy')) customElements.define('sunmoon-energy', NexusSolarCard);
+NexusSolarCard.VERSION = NEXUS_VERSION;
+const nxPrev = customElements.get('sunmoon-energy');
+if (!nxPrev) customElements.define('sunmoon-energy', NexusSolarCard);
+else if (nxPrev !== NexusSolarCard) {
+  console.warn(`SUNMOON-ENERGY: il tag è già registrato da un altro file (versione ${nxPrev.VERSION || 'vecchia, senza numero'}). ` +
+    `Questa copia v${NEXUS_VERSION} NON è attiva: rimuovi la risorsa duplicata o vecchia.`);
+}
 if (!customElements.get('sunmoon-energy-editor')) customElements.define('sunmoon-energy-editor', NexusSolarCardEditor);
 
 window.customCards = window.customCards || [];
@@ -1486,4 +1517,4 @@ if (!window.customCards.some((c) => c.type === 'sunmoon-energy')) {
   });
 }
 
-console.info(`%c SUNMOON-ENERGY %c v${NEXUS_VERSION} `, 'color:#030610;background:#55EAFF;font-weight:700', 'color:#55EAFF;background:#030610');
+console.info(`%c SUNMOON-ENERGY %c v${NEXUS_VERSION}${nxPrev && nxPrev !== NexusSolarCard ? ' (NON attiva: tag già registrato)' : ''} `, 'color:#030610;background:#55EAFF;font-weight:700', 'color:#55EAFF;background:#030610');
