@@ -1,9 +1,9 @@
 /*!
- * Sunmoon Energy  v1.0.8
+ * Sunmoon Energy  v1.0.9
  * Card Lovelace custom per Home Assistant: sole, traliccio, casa e flussi energetici animati.
  * Configurabile interamente da editor grafico.
  */
-const NEXUS_VERSION = '1.0.8';
+const NEXUS_VERSION = '1.0.9';
 
 const NEXUS_DEFAULTS = {
   solar_power: '',
@@ -521,17 +521,19 @@ class NexusSolarCard extends HTMLElement {
     const tx = center ? w / 2 : (o.shape === 'home' ? 14 : 16);
     const anchor = center ? 'middle' : 'start';
 
-    let frame;
+    let fd, dfl, op, accent;
     if (o.shape === 'solar') {
-      frame = `<path d="M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0L-12 ${H - 12}V12Z" fill="#0A1427" stroke="${o.color}" stroke-opacity=".9"/>
-               <path d="M0 0H${w}" stroke="${o.color}" stroke-width="2"/>`;
+      fd = `M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0L-12 ${H - 12}V12Z`; dfl = '#0A1427'; op = '.9';
+      accent = `<path d="M0 0H${w}" stroke="${o.color}" stroke-width="2"/>`;
     } else if (o.shape === 'grid') {
-      frame = `<path d="M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0Z" fill="#091426" stroke="${o.color}" stroke-opacity=".85"/>
-               <path d="M0 0H5V${H}H0Z" fill="${o.color}"/>`;
+      fd = `M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0Z`; dfl = '#091426'; op = '.85';
+      accent = `<path d="M0 0H5V${H}H0Z" fill="${o.color}"/>`;
     } else {
-      frame = `<path d="M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0Z" fill="#091728" stroke="${o.color}" stroke-opacity=".85"/>
-               <path d="M0 0H${w}" stroke="${o.color}" stroke-width="2"/>`;
+      fd = `M0 0H${w}L${w + 12} 12V${H - 12}L${w} ${H}H0Z`; dfl = '#091728'; op = '.85';
+      accent = `<path d="M0 0H${w}" stroke="${o.color}" stroke-width="2"/>`;
     }
+    const frame = `<path d="${fd}" fill="${o.fill || dfl}" stroke="${o.color}" stroke-opacity="${o.glow ? 1 : op}"${o.glow ? ' stroke-width="1.6"' : ''}/>` +
+      (o.glow ? `<path d="${fd}" fill="none" stroke="${o.color}" stroke-width="3" stroke-opacity="${o.glow}" filter="url(#nx-box-glow)"/>` : '') + accent;
 
     const labelFill = o.shape === 'home' ? '#A6C6D9' : (o.shape === 'solar' ? '#B7C7DF' : '#A9BED7');
     let g = frame;
@@ -644,19 +646,19 @@ class NexusSolarCard extends HTMLElement {
     const hubOnWall = !houseImg && hubStyle !== 'direct';
     const L = hubOnWall;
 
-    const ss = sc('sun_scale'), sx = 500 + num('sun_x'), sy = 245 + num('sun_y');
-    const ts = sc('pylon_scale') * (X && !L ? 0.88 : 1), px = (X && !L ? 150 : 180) + num('pylon_x'), py = (L ? (X ? 500 : 524) : (X ? 488 : 524)) + num('pylon_y');
-    const hs = sc('house_scale') * 1.3 * (X && !L ? 0.88 : 1), hx = (L ? 690 : (X ? 856 : 849)) + num('house_x'), hy = (X && !L ? 470 : 494) + num('house_y');
+    const ss = sc('sun_scale') * (L ? 0.85 : 1), sx = 500 + num('sun_x'), sy = (L ? 115 : 245) + num('sun_y');
+    const ts = sc('pylon_scale') * (L ? 0.9 : (X ? 0.88 : 1)), px = (X && !L ? 150 : 180) + num('pylon_x'), py = (L ? 450 : (X ? 488 : 524)) + num('pylon_y');
+    const hs = sc('house_scale') * 1.3 * (L ? 0.95 : (X ? 0.88 : 1)), hx = (L ? 675 : (X ? 856 : 849)) + num('house_x'), hy = (L ? 444 : (X ? 470 : 494)) + num('house_y');
     const gp = (lx, ly) => [px + (lx - 106) * ts, py + (ly - 289) * ts];
     const gh = (lx, ly) => [hx + (lx - 107) * hs, hy + (ly - 229) * hs];
     const hl = (a, b, z) => gh(22 + 84 * (a + b), 199 + 30 * a - 30 * b - z);   // punto sulla casa disegnata (a, b lungo i muri, z altezza)
-    const bHub = hasBatt ? 0.26 : 0.5, bBat = 0.74;           // posizione lungo la parete destra (0 = sinistra, 1 = destra)
+    const bHub = 0.5, bBat = 0.83;           // posizione lungo la parete destra (0 = sinistra, 1 = destra)
     const wallSkew = -30 / 84;                                // inclinazione della parete destra
-    const bsc = L ? sc('battery_scale') * sc('house_scale') * (battImg ? 0.38 : 0.55) : sc('battery_scale') * 0.95;
+    const bsc = L ? sc('battery_scale') * 0.95 * sc('house_scale') * (battImg ? 0.34 : 0.48) : sc('battery_scale') * 0.95;
     const bPos = L ? hl(1, bBat, 26) : [642, 582];
     const bx = bPos[0] + num('battery_x'), by = bPos[1] + num('battery_y');
     const bSk = L ? wallSkew : 0;
-    const csc = sc('car_scale') * (L ? 0.62 : 0.9), carX = (L ? 905 : 392) + num('car_x'), carY = (L ? 505 : 590) + num('car_y');
+    const csc = sc('car_scale') * (L ? 0.62 : 0.9), carX = (L ? 855 : 392) + num('car_x'), carY = (L ? 485 : 590) + num('car_y');
     const gb = (lx, ly) => [bx + lx * bsc, by + ly * bsc + lx * bsc * bSk];
     const gcar = (lx, ly) => [carX + lx * csc, carY + ly * csc];
 
@@ -677,10 +679,10 @@ class NexusSolarCard extends HTMLElement {
     const hubImg = hubStyle === 'inverter' ? String(c.hub_image || '').trim().replace(/["<>]/g, '') : '';
     /* il nodo (inverter) sta sulla parete destra della casa, sotto le 2 finestre (a sinistra se c'e' la batteria) */
     const hubWallPos = hl(1, bHub, 26);
-    const hubS = Math.max(0.2, num('hub_scale')) * (hubOnWall ? (hasBatt ? (hubImg ? 0.38 : 0.5) : (hubImg ? 0.48 : 0.62)) * sc('house_scale') : 1);
+    const hubS = Math.max(0.2, num('hub_scale')) * (hubOnWall ? (hubImg ? 0.48 : 0.62) * 0.95 * 0.85 * sc('house_scale') : 1);
     const hubSkew = hubOnWall && hubStyle === 'inverter' ? wallSkew : 0;   // stessa inclinazione della parete
     const hubSkewDeg = (Math.atan(hubSkew) * 180 / Math.PI).toFixed(2);
-    const hubX = (hubOnWall ? hubWallPos[0] : 500) + num('hub_x'), hubY = (hubOnWall ? hubWallPos[1] : (X ? 445 : 455)) + num('hub_y');
+    const hubX = (hubOnWall ? hubWallPos[0] - 20 : 500) + num('hub_x'), hubY = (hubOnWall ? hubWallPos[1] + 5 : (X ? 445 : 455)) + num('hub_y');
     const hubP = (lx, ly) => [hubX + lx * hubS, hubY + ly * hubS + lx * hubS * hubSkew];
     const hubPorts = hubStyle === 'reactor'
       ? { top: hubP(0, -44), left: hubP(-44, 0), right: hubP(44, 0), bl: hubP(-26, 36), br: hubP(26, 36), rt: hubP(31, -31) }
@@ -699,8 +701,8 @@ class NexusSolarCard extends HTMLElement {
     const pvStart = hl(0.929, 0.06, 114.8);                  // pannello piu' vicino allo spigolo anteriore
     const frontPt = gh(107, 252);                            // davanti alla casa, sotto lo spigolo
     const cornerX = hl(1, 0, 0)[0];                          // spigolo verticale tra facciata e parete destra
-    const edgeR = hl(1, 1, 0)[0];                            // spigolo verticale destro della parete
-    const homeEnd = hubOnWall ? hl(1.03, 1.04, 102) : gridEnd;    // estremita' destra dei led sottotetto
+    const gapX = hl(1, 0.5, 0)[0];                           // spazio tra le due finestre
+    const homeEnd = hubOnWall ? hl(1.03, 0.49, 102) : gridEnd;    // led sottotetto, sopra lo spazio tra le finestre
     const homeStart = hubOnWall ? hubPorts.rt : hubPorts.right;
     const yRun = frontPt[1];                                 // percorso orizzontale davanti alla casa (rete e auto)
     const boltPath = (pts0, amp) => {
@@ -763,7 +765,7 @@ class NexusSolarCard extends HTMLElement {
         const main = mixSrc.reduce((a, x) => (x[2] > a[2] ? x : a), mixSrc[0]);
         const hasImp = mixSrc.some((x) => x[0] === 'imp');
         const cls = hasImp ? 'nx-grid-import' : mixSrc.every((x) => x[0] === 'bat') ? 'nx-bolt-bat' : 'nx-bolt-pv';
-        addHub(flow(hubOnWall ? boltPath([homeStart, [edgeR, homeStart[1] - (edgeR - homeStart[0]) * 0.357], homeEnd], AM) : bolt(homeStart, homeEnd, hasImp ? 7 : 5), multi ? 'url(#nx-flow-mix)' : mixSrc[0][1], cls, homeEnd, hasImp, multi ? main[1] : null));
+        addHub(flow(hubOnWall ? boltPath([homeStart, [gapX, homeStart[1] - (gapX - homeStart[0]) * 0.357], homeEnd], AM) : bolt(homeStart, homeEnd, hasImp ? 7 : 5), multi ? 'url(#nx-flow-mix)' : mixSrc[0][1], cls, homeEnd, hasImp, multi ? main[1] : null));
       }
       const gRoute = hubOnWall ? [gridStart, [gridStart[0], yRun], [hubPorts.bl[0], yRun], hubPorts.bl] : [gridStart, hubPorts.left];
       const gAmp = hubOnWall ? AM : 9;
@@ -835,8 +837,12 @@ class NexusSolarCard extends HTMLElement {
     const homeRows = [];
     if (c.home_total_today) homeRows.push({ label: 'CONSUMATO OGGI', value: fmtE(this._energy(c.home_total_today)), color: nxMix(homeColor, 0.3) });
 
-    const bSolar = this._box({ shape: 'solar', w: 248, color: pvColor, title: 'PRODUZIONE FOTOVOLTAICA', value: fmt(solar), unit: 'W', valueColor: solarColor, rows: solarRows, vs: sc('solar_box_value_scale') });
-    const bGrid = this._box({ shape: 'grid', w: 225, color: gridColor, title: 'SCAMBIO RETE', value: fmt(grid === null ? null : Math.abs(grid)), unit: 'W', status: gridLabel, rows: gridRows, vs: sc('grid_box_value_scale') });
+    const bSolar = this._box({ shape: 'solar', w: 248, color: pvColor, title: 'PRODUZIONE FOTOVOLTAICA', value: fmt(solar), unit: 'W', valueColor: solarColor, rows: solarRows, vs: sc('solar_box_value_scale') * (L ? 1.2 : 1) });
+    const gridAct = importing || exporting;
+    const gridTint = gridAct ? nxLerpC('#091426', gridColor, 0.17) : undefined;
+    const gridGlow = gridAct ? 0.5 : 0;
+    const gridValCol = gridAct ? nxMix(gridColor, 0.3) : undefined;
+    const bGrid = this._box({ shape: 'grid', w: 225, color: gridColor, title: 'SCAMBIO RETE', value: fmt(grid === null ? null : Math.abs(grid)), unit: 'W', status: gridLabel, rows: gridRows, vs: sc('grid_box_value_scale'), fill: gridTint, glow: gridGlow, valueColor: gridValCol });
     let homeFrame = houseColor, homeStatusColor = houseColor, homeStatus = load ? 'CARICO ATTIVO' : 'CARICO RIDOTTO';
     if (mixSrc.length && (load || home === null)) {
       const NM = { pv: 'SOLARE', bat: 'BATT.', imp: 'RETE' };
@@ -852,7 +858,11 @@ class NexusSolarCard extends HTMLElement {
         homeStatus = top[0] === 'pv' ? 'ALIMENTATA DAL SOLARE' : top[0] === 'bat' ? 'ALIMENTATA DALLA BATTERIA' : 'ALIMENTATA DALLA RETE';
       }
     }
-    const bHome = this._box({ shape: 'home', w: 219, color: homeFrame, statusColor: homeStatusColor, title: 'CONSUMO CASA', value: fmt(home), unit: 'W', status: homeStatus, rows: homeRows, vs: sc('home_box_value_scale') });
+    const homeAct = mixSrc.length > 0 && (load || home === null);
+    const homeTint = homeAct ? nxLerpC('#091728', homeStatusColor, 0.17) : undefined;
+    const homeGlow = homeAct ? 0.5 : 0;
+    const homeValCol = homeAct ? nxMix(homeStatusColor, 0.3) : undefined;
+    const bHome = this._box({ shape: 'home', w: 219, color: homeFrame, statusColor: homeStatusColor, title: 'CONSUMO CASA', value: fmt(home), unit: 'W', status: homeStatus, rows: homeRows, vs: sc('home_box_value_scale') * (L ? 1.4 : 1), fill: homeTint, glow: homeGlow, valueColor: homeValCol });
 
     let bBatt = null, bCar = null;
     if (hasBatt) {
@@ -860,7 +870,7 @@ class NexusSolarCard extends HTMLElement {
       if (c.battery_charge_today) rows.push({ label: 'CARICATA OGGI', value: fmtE(this._energy(c.battery_charge_today)), color: nxMix(battColor, 0.3) });
       if (c.battery_discharge_today) rows.push({ label: 'SCARICATA OGGI', value: fmtE(this._energy(c.battery_discharge_today)), color: nxMix(battColor, 0.3) });
       const bst = batt === null ? '' : charging ? `IN CARICA · ${fmt(bc)} W` : discharging ? `IN SCARICA · ${fmt(bd)} W` : 'IN ATTESA';
-      bBatt = this._box({ shape: 'home', w: 219, color: charging || discharging ? battColor : '#7F97B0', title: 'BATTERIA', value: soc === null ? fmt(batt === null ? null : Math.abs(batt)) : String(Math.round(soc)), unit: soc === null ? 'W' : '%', status: bst, rows, vs: sc('battery_box_value_scale') });
+      bBatt = this._box({ shape: 'home', w: 219, color: charging || discharging ? battColor : '#7F97B0', title: 'BATTERIA', value: soc === null ? fmt(batt === null ? null : Math.abs(batt)) : String(Math.round(soc)), unit: soc === null ? 'W' : '%', status: bst, rows, vs: sc('battery_box_value_scale') * (L ? 1.55 : 1) });
     }
     if (hasCar) {
       const rows = [];
@@ -868,16 +878,16 @@ class NexusSolarCard extends HTMLElement {
       if (c.car_energy_today) rows.push({ label: 'ENERGIA OGGI', value: fmtE(this._energy(c.car_energy_today)), color: nxMix(carColor, 0.3) });
       bCar = this._box({ shape: 'grid', w: 225, color: carCharging ? carColor : '#7F97B0', title: 'RICARICA AUTO', value: c.car_power ? fmt(carRaw === null ? null : carW) : (carSoc === null ? '—' : String(Math.round(carSoc))), unit: c.car_power ? 'W' : '%', status: carCharging ? 'IN CARICA' : 'IN ATTESA', rows, vs: sc('car_box_value_scale') });
     }
-    const bbs = sc('battery_box_scale') * 0.9, cbs = sc('car_box_scale') * 0.9;
-    const battT = L ? `translate(${24 + num('battery_box_x')} ${540 + num('battery_box_y')}) scale(${bbs})`
+    const bbs = sc('battery_box_scale') * 0.9 * (L ? 0.65 : 1), cbs = sc('car_box_scale') * 0.9;
+    const battT = L ? `translate(${24 + 800 + num('battery_box_x')} ${540 - 300 + num('battery_box_y')}) scale(${bbs})`
       : `translate(${982 + num('battery_box_x') - 231 * bbs} ${540 + num('battery_box_y')}) scale(${bbs})`;
-    const carT = L ? `translate(${982 + num('car_box_x') - 231 * cbs} ${540 + num('car_box_y')}) scale(${cbs})`
+    const carT = L ? `translate(${982 - 300 + num('car_box_x') - 231 * cbs} ${540 - 50 + num('car_box_y')}) scale(${cbs})`
       : `translate(${24 + num('car_box_x')} ${540 + num('car_box_y')}) scale(${cbs})`;
 
-    const sbs = sc('solar_box_scale'), gbs = sc('grid_box_scale'), hbs = sc('home_box_scale');
-    const solarT = `translate(${500 + num('solar_box_x') - 124 * sbs} ${18 + num('solar_box_y')}) scale(${sbs})`;
-    const gridT = `translate(${24 + num('grid_box_x')} ${118 + num('grid_box_y')}) scale(${gbs})`;
-    const homeT = `translate(${982 + num('home_box_x') - 231 * hbs} ${118 + num('home_box_y')}) scale(${hbs})`;
+    const sbs = sc('solar_box_scale') * (L ? 0.75 : 1), gbs = sc('grid_box_scale') * (L ? 0.75 : 1), hbs = sc('home_box_scale') * (L ? 0.75 : 1);
+    const solarT = `translate(${500 + (L ? 270 : 0) + num('solar_box_x') - 124 * sbs} ${18 + (L ? 80 : 0) + num('solar_box_y')}) scale(${sbs})`;
+    const gridT = `translate(${24 + (L ? 80 : 0) + num('grid_box_x')} ${118 + (L ? -30 : 0) + num('grid_box_y')}) scale(${gbs})`;
+    const homeT = `translate(${982 + (L ? -450 : 0) + num('home_box_x') - 231 * hbs} ${118 + (L ? 130 : 0) + num('home_box_y')}) scale(${hbs})`;
 
     /* ---- meteo, giorno/notte e luna ---- */
     const wxStates = (this._hass && this._hass.states) || {};
@@ -1284,6 +1294,7 @@ class NexusSolarCard extends HTMLElement {
 
     const boxesInner = `
       <defs>
+        <filter id="nx-box-glow" x="-20%" y="-30%" width="140%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
         <linearGradient id="nx-box-mix" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="231" y2="0">${mixStops}</linearGradient>
       </defs>
       <g transform="${gridT}">${bGrid.g}</g>
