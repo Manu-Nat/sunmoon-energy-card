@@ -1,9 +1,9 @@
 /*!
- * Sunmoon Energy  v1.1.0
+ * Sunmoon Energy  v1.1.1
  * Card Lovelace custom per Home Assistant: sole, traliccio, casa e flussi energetici animati.
  * Configurabile interamente da editor grafico.
  */
-const NEXUS_VERSION = '1.1.0';
+const NEXUS_VERSION = '1.1.1';
 
 const NEXUS_DEFAULTS = {
   solar_power: '',
@@ -653,7 +653,7 @@ class NexusSolarCard extends HTMLElement {
     const gh = (lx, ly) => [hx + (lx - 107) * hs, hy + (ly - 229) * hs];
     const LA = 1.5, WZ = 108, RH = 46;                        // lunghezza della parete lunga (sinistra), altezza muri e colmo
     const hl = (a, b, z) => gh(22 + 84 * (a + b), 199 + 30 * a - 30 * b - z);   // punto sulla casa disegnata (a lungo la parete di sinistra, b lungo quella di destra, z altezza)
-    const aHub = 0.22, aBat = 1.26;                           // inverter sotto la finestra di sinistra, batteria sotto quella di destra (parete lunga)
+    const aHub = 0.37, aBat = 1.13;                           // inverter sotto la finestra di sinistra, batteria sotto quella di destra (parete lunga)
     const wallSkew = 30 / 84;                                 // inclinazione della parete di sinistra
     const bsc = L ? sc('battery_scale') * 0.95 * sc('house_scale') * (battImg ? 0.34 : 0.48) : sc('battery_scale') * 0.95;
     const bPos = L ? hl(aBat, 0, 26) : [642, 582];
@@ -699,11 +699,12 @@ class NexusSolarCard extends HTMLElement {
        Con un'immagine personalizzata della casa non sono noti, quindi si resta sul comportamento precedente */
     const useGeo = !houseImg;
     const panSrc = hl(0.166, 0.225, 129.5);                  // primo pannello a sinistra, da cui parte la produzione
-    const pvStart = hl(0.149, 0.06, 114.8);                  // primo pannello a sinistra
+    const pvStart = hl(0.157, 0.043, 113.3);                 // primo pannello a sinistra
+    const topLeft = hl(0, 0, WZ);                            // cima dello spigolo verticale sinistro
     const frontPt = gh(107 + 84 * (LA - 1), 252 + 30 * (LA - 1));   // davanti alla casa, sotto il vertice anteriore
     const leftX = hl(0, 0, 0)[0];                            // spigolo verticale sinistro della casa
-    const gapX = hl(0.52, 0, 0)[0];                          // striscia a destra della finestra di sinistra
-    const homeEnd = hubOnWall ? hl(0.52, -0.06, 102) : gridEnd;   // led sottotetto, sopra la striscia
+    const gapX = hl(0.75, 0, 0)[0];                          // striscia centrale, tra le due finestre
+    const homeEnd = hubOnWall ? hl(0.75, -0.06, 102) : gridEnd;   // led sottotetto, sopra la striscia centrale
     const homeStart = hubOnWall ? hubPorts.rt : hubPorts.right;
     const yRun = frontPt[1];                                 // percorso orizzontale davanti alla casa (rete e auto)
     const boltPath = (pts0, amp) => {
@@ -760,7 +761,7 @@ class NexusSolarCard extends HTMLElement {
       if (exporting) addTop(flow(bolt(pvFrom(gridStart), gridStart, 9), exportColor, 'nx-grid-export', gridStart, true));
       if (importing) flows += flow(bolt(gridStart, gridEnd, 9), importColor, 'nx-grid-import', gridEnd, true);
     } else {
-      if (pv) addHub(flow(hubOnWall ? boltPath([pvStart, [leftX, hubPorts.left[1] - (hubPorts.left[0] - leftX) * 0.357], hubPorts.left], AM) : bolt(pvFrom(hubPorts.top), hubPorts.top, 5), pvColor, 'nx-bolt-pv', hubOnWall ? hubPorts.left : hubPorts.top, false));
+      if (pv) addHub(flow(hubOnWall ? boltPath([pvStart, topLeft, [leftX, hubPorts.left[1] - (hubPorts.left[0] - leftX) * 0.357], hubPorts.left], [AM, 2.5, 2.5, 2.5]) : bolt(pvFrom(hubPorts.top), hubPorts.top, 5), pvColor, 'nx-bolt-pv', hubOnWall ? hubPorts.left : hubPorts.top, false));
       if ((homeW > 10 || home === null) && mixSrc.length) {
         const multi = mixSrc.length > 1;
         const main = mixSrc.reduce((a, x) => (x[2] > a[2] ? x : a), mixSrc[0]);
@@ -1059,7 +1060,7 @@ class NexusSolarCard extends HTMLElement {
     const winFill = `fill="${load ? '#4AF4FF' : '#1C3045'}" fill-opacity="${load ? 0.9 : 0.3}" stroke="${houseColor}" stroke-width="1.6"`;
     const winBars = `stroke="#D9FFFF" stroke-opacity="${load ? 0.9 : 0.22}" stroke-width="1.3" fill="none"`;
     const dl = LA - 1;
-    const W1 = [0.1, 0.38], W2 = [LA - 0.38, LA - 0.1];      // finestre della parete lunga (sinistra)
+    const W1 = [0.16, 0.58], W2 = [0.92, 1.34];              // finestre della parete lunga (sinistra): centrate e simmetriche, striscia dei consumi al centro (a = 0.75)
     const winLong = (w) => `<path d="${poly([[w[0], 0, 52], [w[1], 0, 52], [w[1], 0, 90], [w[0], 0, 90]])}" ${winFill}/>
         <path d="M${Pt((w[0] + w[1]) / 2, 0, 52)}L${Pt((w[0] + w[1]) / 2, 0, 90)}M${Pt(w[0], 0, 71)}L${Pt(w[1], 0, 71)}" ${winBars}/>`;
     const houseDrawn = `
