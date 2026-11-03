@@ -1,9 +1,9 @@
 /*!
- * Sunmoon Energy  v1.1.2
+ * Sunmoon Energy  v1.1.3
  * Card Lovelace custom per Home Assistant: sole, traliccio, casa e flussi energetici animati.
  * Configurabile interamente da editor grafico.
  */
-const NEXUS_VERSION = '1.1.2';
+const NEXUS_VERSION = '1.1.3';
 
 const NEXUS_DEFAULTS = {
   solar_power: '',
@@ -1086,13 +1086,13 @@ class NexusSolarCard extends HTMLElement {
         ${winLong(W1)}
         ${winLong(W2)}
 
-        <path d="${poly([[LA, 0.14, 52], [LA, 0.86, 52], [LA, 0.86, 90], [LA, 0.14, 90]])}" ${winFill}/>
-        <path d="M${Pt(LA, 0.38, 52)}L${Pt(LA, 0.38, 90)}M${Pt(LA, 0.62, 52)}L${Pt(LA, 0.62, 90)}M${Pt(LA, 0.14, 71)}L${Pt(LA, 0.86, 71)}" ${winBars}/>
+        <path d="${poly([[LA, 0.14, 71], [LA, 0.86, 71], [LA, 0.86, 90], [LA, 0.14, 90]])}" ${winFill}/>
+        <path d="M${Pt(LA, 0.38, 71)}L${Pt(LA, 0.38, 90)}M${Pt(LA, 0.62, 71)}L${Pt(LA, 0.62, 90)}" ${winBars}/>
         <circle cx="${pj(LA, 0.5, WZ + 18)[0].toFixed(1)}" cy="${pj(LA, 0.5, WZ + 18)[1].toFixed(1)}" r="5" fill="${load ? '#4AF4FF' : '#1C3045'}" fill-opacity="${load ? 0.85 : 0.3}" stroke="${houseColor}" stroke-width="1.4"/>
 
-        <path d="${poly([[LA, 0.37, 0], [LA, 0.63, 0], [LA, 0.63, 47], [LA, 0.37, 47]])}" fill="#FFCA69" fill-opacity="${load ? 0.85 : 0.2}" stroke="#FFDC88" stroke-width="1.6" stroke-linejoin="round"/>
-        <path d="M${Pt(LA, 0.42, 4)}L${Pt(LA, 0.42, 43)}" stroke="#FFF5CA" stroke-opacity=".55" stroke-width="1.2"/>
-        <circle cx="${pj(LA, 0.58, 24)[0].toFixed(1)}" cy="${pj(LA, 0.58, 24)[1].toFixed(1)}" r="2" fill="#FFF5CA"/>
+        <path d="${poly([[LA, 0.37, 0], [LA, 0.63, 0], [LA, 0.63, 62], [LA, 0.37, 62]])}" fill="#FFCA69" fill-opacity="${load ? 0.85 : 0.2}" stroke="#FFDC88" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M${Pt(LA, 0.42, 4)}L${Pt(LA, 0.42, 58)}" stroke="#FFF5CA" stroke-opacity=".55" stroke-width="1.2"/>
+        <circle cx="${pj(LA, 0.58, 31)[0].toFixed(1)}" cy="${pj(LA, 0.58, 31)[1].toFixed(1)}" r="2" fill="#FFF5CA"/>
 
         <path d="M${Pt(0, 0, 0)}L${Pt(LA, 0, 0)}L${Pt(LA, 1, 0)}" fill="none" stroke="${roofColor}" stroke-width="4" filter="url(#nx-glow)"/>
         <path d="M${Pt(0, 0, 0)}L${Pt(LA, 0, 0)}L${Pt(LA, 1, 0)}" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-dasharray="3 13" class="nx-roof-pulse"/>
