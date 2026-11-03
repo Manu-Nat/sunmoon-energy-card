@@ -1,90 +1,115 @@
-# ☀️🌙 Sun Moon Energy
+# ☀️ Sunmoon Energy Card
 
-**Una card Lovelace personalizzata per Home Assistant che porta il flusso energetico della casa in una scena animata: sole, cielo, luna, traliccio, abitazione e nodo centrale, con dati di produzione, consumo e scambio con la rete.** La configurazione avviene tramite un editor grafico integrato; i sensori e le funzionalità facoltative possono essere selezionati in base agli elementi disponibili nel proprio impianto.
+**Una card Lovelace personalizzata per Home Assistant che trasforma i dati energetici della casa in una scena animata.** Produzione fotovoltaica, consumi, scambio con la rete, meteo, ciclo giorno/notte e, se configurati, batteria di accumulo e ricarica dell'auto elettrica.
 
-**Lingue della documentazione:** Italiano · English below
+La card include un **editor visuale** per configurare sensori, colori, immagini, dimensioni e posizione degli elementi direttamente da Home Assistant.
 
-> **Stato del progetto:** pacchetto iniziale per GitHub. La card legge entità già presenti in Home Assistant: non installa integrazioni, non crea sensori e non sostituisce la configurazione dell'inverter, del contatore o della batteria. Prima di usarla come dashboard operativa, verifica le entità, le unità di misura e il segno dei sensori nel tuo impianto.
+<p align="center">
+  <img src="images/sunmoon-energy-basic.png" alt="Sunmoon Energy Card - produzione fotovoltaica, rete e consumo domestico" width="100%">
+</p>
+
+<p align="center"><em>Vista principale: produzione fotovoltaica, scambio con la rete e consumo della casa.</em></p>
+
+<p align="center">
+  <img src="images/sunmoon-energy-battery-ev.png" alt="Sunmoon Energy Card - batteria di accumulo e ricarica auto elettrica" width="100%">
+</p>
+
+<p align="center"><em>Vista con batteria di accumulo e ricarica dell'auto elettrica.</em></p>
 
 ---
 
 ## 🇮🇹 Documentazione in italiano
 
-### ✨ Caratteristiche
+### ✨ Funzionalità
 
-- **Scena energetica animata** con sole, cielo, luna, traliccio elettrico e casa.
-- **Flussi energetici colorati** per produzione fotovoltaica, prelievo dalla rete, immissione in rete e consumo domestico.
-- **Nodo centrale configurabile**: rappresentazione tipo inverter, nucleo/reattore oppure flussi diretti senza nodo.
-- **Meteo e ciclo giorno/notte** tramite entità di Home Assistant, con anteprime per provare condizioni e illuminazione.
-- **Supporto opzionale per batteria e auto elettrica**, se sono disponibili i relativi sensori.
-- **Totali giornalieri facoltativi** per produzione, consumo, energia importata/esportata e altre misure configurate.
-- **Editor visuale integrato** per scegliere le entità, modificare colori e regolare scala e posizione degli elementi senza scrivere tutto lo YAML a mano.
-- **Personalizzazione grafica**: colori dei flussi, etichette, immagini personalizzate e regolazione di dimensioni/posizioni degli elementi supportati.
+- **Scena energetica animata** con sole, cielo, luna, traliccio elettrico e abitazione.
+- **Flussi energetici dinamici** per produzione fotovoltaica, prelievo dalla rete, immissione in rete e consumo domestico.
+- **Riquadri informativi** per potenze istantanee e totali giornalieri.
+- **Nodo centrale personalizzabile** con tre modalità: inverter, nucleo/reattore oppure flussi diretti senza nodo.
+- **Meteo animato**: nuvole, nebbia, pioggia, temporali, grandine, neve e vento in base alla condizione dell'entità meteo.
+- **Ciclo giorno/notte** con sole e luna; supporto all'entità `sun.sun` o a sensori di alba e tramonto.
+- **Batteria di accumulo opzionale** con potenza, stato di carica e totali giornalieri di carica/scarica.
+- **Auto elettrica opzionale** con potenza, stato di carica ed energia giornaliera.
+- **Editor visuale integrato** per selezionare le entità e personalizzare colori, etichette, immagini, dimensioni e posizione degli elementi.
+- **Anteprime meteo e notte** disponibili nell'editor per provare l'aspetto della scena.
 
-Le funzionalità effettivamente visibili dipendono dalle entità configurate e dai dati forniti dalle integrazioni del tuo impianto.
+Le funzioni relative a batteria, auto, meteo e totali vengono visualizzate quando vengono configurate le relative entità. La card non crea sensori e non sostituisce le integrazioni del tuo impianto.
 
 ### 📋 Requisiti
 
 - Home Assistant con dashboard Lovelace.
-- Nessuna integrazione Python `custom_components` è richiesta dalla card.
-- Entità di Home Assistant per i dati che si desidera mostrare. Possono provenire, per esempio, dall'integrazione dell'inverter, da un contatore/monitor dei consumi, da un sistema di accumulo, da un caricatore EV o da un'integrazione meteo.
-- Per il ciclo giorno/notte è possibile usare `sun.sun` (se presente) oppure configurare i sensori di alba e tramonto previsti dalla card.
-- Per il meteo è facoltativa un'entità di dominio `weather`.
+- Un'installazione funzionante delle integrazioni che forniscono i dati energetici.
+- Entità di Home Assistant per i valori che vuoi visualizzare.
+- Nessuna integrazione Python `custom_components` è necessaria: questa è una **custom Lovelace card** basata su JavaScript.
 
-**Non è obbligatorio avere tutti i sensori.** Lascia vuote le opzioni non utilizzate nell'editor grafico. La card non può mostrare valori che Home Assistant non riceve.
+Non è necessario disporre di tutti i sensori: le sezioni non utilizzate possono rimanere non configurate.
 
-### 📦 Installazione manuale
+### 📦 Installazione con HACS
 
-1. Scarica `sunmoon-energy.js` da questo repository.
+1. Apri **HACS** in Home Assistant.
+2. Vai in **⋮ → Repository personalizzati**.
+3. Incolla l'URL GitHub di questo repository.
+4. Seleziona la categoria **Dashboard** e conferma.
+5. Cerca **Sun Moon Energy** in HACS e installala.
+6. Se HACS non registra automaticamente la risorsa, aggiungila da **Impostazioni → Dashboard → Risorse** come JavaScript di tipo **Modulo**, usando il percorso indicato da HACS. Normalmente il percorso è:
+
+   ```text
+   /hacsfiles/sunmoon-energy/sunmoon-energy.js
+   ```
+
+7. Aggiorna la dashboard. Se necessario, svuota la cache del browser.
+
+> Il repository deve essere pubblicato su GitHub prima di poter essere aggiunto come repository personalizzato in HACS.
+
+### 🧰 Installazione manuale
+
+1. Scarica il file `sunmoon-energy.js` dalla sezione dei file del repository.
 2. Copialo nella cartella `/config/www/` di Home Assistant.
-3. Apri **Impostazioni → Dashboard → Risorse** (la dicitura può cambiare in base alla versione di Home Assistant).
-4. Aggiungi una risorsa JavaScript di tipo **Modulo** con URL:
+3. Apri **Impostazioni → Dashboard → Risorse**.
+4. Aggiungi una risorsa con URL:
 
    ```text
    /local/sunmoon-energy.js
    ```
 
-5. Salva e aggiorna la pagina. Se la vecchia versione resta in cache, esegui un aggiornamento forzato del browser.
-6. Apri una dashboard, aggiungi una scheda manuale e usa `type: custom:sunmoon-energy`.
+5. Imposta il tipo di risorsa su **Modulo** e salva.
+6. Aggiorna la pagina di Home Assistant.
+7. Aggiungi una nuova scheda manuale alla dashboard e seleziona il tipo `custom:sunmoon-energy`.
 
-### 🧩 Installazione tramite HACS
+### ⚡ Sensori ed entità
 
-1. Pubblica il repository su GitHub.
-2. Apri **HACS** e vai al menu dei repository personalizzati.
-3. Aggiungi l'URL del repository GitHub e seleziona la categoria **Dashboard**.
-4. Installa **Sun Moon Energy**.
-5. Se la risorsa non viene aggiunta automaticamente, registrala in **Impostazioni → Dashboard → Risorse** usando `/hacsfiles/sunmoon-energy/sunmoon-energy.js` oppure l'URL indicato dalla tua installazione HACS.
-6. Aggiorna il browser e aggiungi la card alla dashboard.
+Gli entity ID riportati sotto sono esempi: devi sostituirli con quelli presenti nella tua installazione. Puoi selezionare le entità dall'editor visuale oppure inserirle nella configurazione YAML.
 
-> Le voci e gli URL gestiti da HACS possono variare secondo la versione. Se il file non viene caricato, controlla la risorsa effettiva mostrata in Home Assistant.
-
-### ⚡ Entità e sensori
-
-I nomi degli entity ID sono diversi da impianto a impianto. I seguenti sono esempi, non entità create automaticamente dalla card.
-
-| Opzione | Cosa rappresenta | Obbligatoria? |
+| Opzione YAML | Dato richiesto | Unità tipica |
 |---|---|---|
-| `solar_power` | Potenza fotovoltaica istantanea | Consigliata per il flusso solare |
-| `home_power` | Potenza istantanea assorbita dalla casa | Consigliata per il consumo domestico |
-| `grid_power` | Potenza di scambio con la rete | Consigliata per distinguere prelievo e immissione |
-| `solar_forecast_remaining` | Entità configurata per il valore di produzione residua/previsione previsto dalla card | Facoltativa |
-| `solar_total_today` | Energia solare prodotta oggi | Facoltativa |
-| `grid_import_today` | Energia prelevata dalla rete oggi | Facoltativa |
-| `grid_export_today` | Energia immessa in rete oggi | Facoltativa |
-| `home_total_today` | Energia consumata oggi | Facoltativa |
-| `weather_entity` | Entità meteo di dominio `weather` | Facoltativa |
-| `sun_entity` | Entità sole, normalmente `sun.sun` | Facoltativa se si usano sensori alternativi |
-| `sun_rising`, `sun_setting` | Sensori di alba e tramonto | Facoltativi |
-| `battery_power`, `battery_soc` | Potenza e stato di carica della batteria | Facoltativi |
-| `battery_charge_today`, `battery_discharge_today` | Energia di carica/scarica giornaliera | Facoltativi |
-| `car_power`, `car_soc`, `car_energy_today` | Potenza, stato di carica e/o energia dell'auto | Facoltativi |
-| `hub_entity` | Entità di potenza associata al nodo centrale | Facoltativa |
+| `solar_power` | Potenza fotovoltaica istantanea | W |
+| `home_power` | Potenza istantanea assorbita dalla casa | W |
+| `grid_power` | Potenza di scambio con la rete | W |
+| `solar_forecast_remaining` | Produzione residua prevista | kWh |
+| `solar_total_today` | Energia fotovoltaica prodotta oggi | kWh |
+| `grid_import_today` | Energia prelevata oggi dalla rete | kWh |
+| `grid_export_today` | Energia immessa oggi in rete | kWh |
+| `home_total_today` | Energia consumata oggi dalla casa | kWh |
+| `weather_entity` | Entità meteo di Home Assistant | — |
+| `sun_entity` | Entità sole, normalmente `sun.sun` | — |
+| `sun_rising` | Sensore orario alba | — |
+| `sun_setting` | Sensore orario tramonto | — |
+| `battery_power` | Potenza della batteria | W |
+| `battery_soc` | Stato di carica della batteria | % |
+| `battery_charge_today` | Energia caricata nella batteria oggi | kWh |
+| `battery_discharge_today` | Energia scaricata dalla batteria oggi | kWh |
+| `car_power` | Potenza di ricarica dell'auto | W |
+| `car_soc` | Stato di carica dell'auto | % |
+| `car_energy_today` | Energia di ricarica dell'auto oggi | kWh |
+| `hub_entity` | Entità di potenza associata al nodo centrale | W |
 
-Le unità più comuni sono **W** per la potenza e **kWh** per l'energia; controlla le unità reali dei tuoi sensori. Il significato del segno della potenza di rete varia secondo l'integrazione. Se prelievo e immissione risultano invertiti, usa l'opzione di inversione della rete nell'editor.
+**Attenzione a unità e segno dei sensori:** le integrazioni possono esprimere la potenza di rete con convenzioni differenti. Se il flusso di prelievo e quello di immissione risultano invertiti, utilizza `grid_invert`. Per la batteria è disponibile `battery_invert`.
 
-### 🧪 Esempio di configurazione YAML
+### 🧩 Configurazione YAML
 
-Puoi configurare la card dall'editor visuale oppure inserire manualmente una configurazione essenziale. Sostituisci gli entity ID con quelli effettivi della tua installazione.
+La card può essere configurata interamente dall'editor visuale. In alternativa, puoi usare una configurazione YAML.
+
+Esempio essenziale:
 
 ```yaml
 type: custom:sunmoon-energy
@@ -94,38 +119,96 @@ grid_power: sensor.potenza_rete_inverted
 sun_entity: sun.sun
 ```
 
-I tre sensori energetici dell'esempio provengono da una configurazione di sviluppo e **non sono nomi universali**. Se non esistono nel tuo Home Assistant, seleziona i sensori corretti nell'editor.
+Esempio con totali giornalieri, meteo, batteria e auto elettrica:
 
-### 🎨 Editor grafico e personalizzazione
+```yaml
+type: custom:sunmoon-energy
+solar_power: sensor.potenza_fotovoltaica
+home_power: sensor.consumo_casa
+grid_power: sensor.potenza_rete
+solar_total_today: sensor.produzione_fv_oggi
+grid_import_today: sensor.prelevata_oggi
+grid_export_today: sensor.immessa_oggi
+home_total_today: sensor.consumo_oggi
+weather_entity: weather.forecast_casa
+sun_entity: sun.sun
+battery_power: sensor.potenza_batteria
+battery_soc: sensor.batteria_soc
+car_power: sensor.potenza_ricarica_auto
+car_soc: sensor.auto_soc
+car_energy_today: sensor.energia_auto_oggi
+```
 
-L'editor della card raggruppa le impostazioni in sezioni, tra cui:
+Gli entity ID dei due esempi sono illustrativi e non vengono creati dalla card. Verifica sempre i nomi effettivi in **Strumenti per sviluppatori → Stati**.
 
-- sensori di potenza e totali giornalieri;
-- colori dei flussi energetici;
-- meteo, giorno/notte e fase/velocità della luna;
-- nodo centrale e relativa etichetta o immagine;
-- sole, traliccio e casa;
-- batteria e auto elettrica;
-- immagini personalizzate e controlli di scala/posizione per gli elementi e i riquadri supportati.
+### 🎨 Personalizzazione
 
-I nomi e i controlli visibili possono dipendere dalla versione del file JavaScript installato.
+L'editor visuale organizza le impostazioni in sezioni. Tra le principali:
+
+| Sezione | Impostazioni |
+|---|---|
+| Sensori | Entità di produzione, consumo, rete e totali giornalieri |
+| Flussi energetici | Colori di produzione, prelievo/immissione e consumo |
+| Meteo e ciclo giorno/notte | Entità meteo, sole, alba e tramonto; anteprime meteo/notte |
+| Nodo centrale | Stile inverter/reattore/flussi diretti, etichetta, entità e immagine |
+| Sole e traliccio | Scala e posizione |
+| Casa | Immagine personalizzata, scala e posizione |
+| Batteria | Sensori, inversione, etichetta, immagine, scala e posizione |
+| Auto elettrica | Sensori, etichetta, immagine, scala e posizione |
+| Riquadri informativi | Dimensione, dimensione dei valori e posizione dei riquadri |
+
+Tra i parametri disponibili nel codice sono presenti anche `solar_max_power`, `weather_intensity` e `moon_speed`. Per la personalizzazione ordinaria è consigliato utilizzare l'editor integrato, così da evitare errori nei nomi delle opzioni.
 
 ### 🛠️ Risoluzione dei problemi
 
-- **“Custom element doesn't exist: sunmoon-energy”**: controlla che il file sia nella cartella corretta, che la risorsa sia registrata come modulo e che l'URL sia corretto; quindi aggiorna la cache del browser.
-- **Valori vuoti o non corretti**: verifica gli entity ID in **Strumenti per sviluppatori → Stati** e controlla che i sensori restituiscano valori validi.
-- **Flussi di rete al contrario**: controlla il segno usato dal sensore e l'opzione di inversione della rete.
-- **Meteo non visualizzato**: seleziona un'entità `weather` valida e controlla che riporti una condizione supportata.
-- **Effetti giorno/notte non coerenti**: verifica `sun.sun` oppure configura sensori alternativi di alba e tramonto.
-- **Modifiche non visibili**: ricarica forzatamente la pagina e controlla la console del browser per eventuali errori JavaScript.
+**La card mostra “Custom element doesn't exist: sunmoon-energy”**
+
+- Verifica che `sunmoon-energy.js` sia stato installato.
+- Controlla che la risorsa sia registrata come **Modulo**.
+- Verifica che il percorso della risorsa corrisponda al metodo di installazione.
+- Aggiorna la pagina e svuota la cache del browser.
+
+**Uno o più valori non vengono visualizzati**
+
+- Controlla che l'entity ID sia corretto.
+- Verifica in **Strumenti per sviluppatori → Stati** che il sensore abbia uno stato numerico valido.
+- Controlla che il sensore restituisca la grandezza attesa (potenza o energia).
+
+**Il flusso della rete è invertito**
+
+- Verifica la convenzione del segno usata dall'integrazione.
+- Prova l'opzione `grid_invert` nell'editor.
+
+**Il flusso della batteria è invertito**
+
+- Controlla come l'integrazione rappresenta carica e scarica.
+- Se necessario, utilizza `battery_invert`.
+
+**Meteo o ciclo giorno/notte non funzionano**
+
+- Verifica l'entità `weather` configurata.
+- Controlla `sun.sun` oppure i sensori di alba e tramonto.
+
+**Le modifiche non compaiono**
+
+- Aggiorna forzatamente la dashboard.
+- Controlla la console del browser per eventuali errori JavaScript o risorse duplicate.
 
 ### 🐞 Segnalazioni e contributi
 
-Quando apri una segnalazione, indica la versione di Home Assistant, la versione di Sun Moon Energy, il metodo d'installazione e gli errori della console. Oscura token, credenziali e informazioni personali. Se possibile, includi una configurazione YAML di esempio senza dati sensibili.
+Per segnalare un problema, indica:
+
+- versione di Home Assistant;
+- versione della card;
+- metodo di installazione (HACS o manuale);
+- messaggio di errore della console, se presente;
+- configurazione YAML di esempio, dopo aver rimosso eventuali dati personali.
+
+Contributi, suggerimenti e segnalazioni sono benvenuti tramite le **Issues** del repository.
 
 ### 📄 Licenza
 
-Nel pacchetto attuale non è ancora inclusa una licenza: la scelta deve essere confermata dall'autore prima della pubblicazione definitiva. La sola presenza su GitHub non concede automaticamente il diritto di riutilizzare, modificare o ridistribuire il codice.
+Il repository include il file `LICENSE`. Consulta quel file per conoscere le condizioni di utilizzo, modifica e redistribuzione del progetto.
 
 ---
 
@@ -133,84 +216,85 @@ Nel pacchetto attuale non è ancora inclusa una licenza: la scelta deve essere c
 
 ### Overview
 
-**Sun Moon Energy is a custom Home Assistant Lovelace card that presents household energy data in an animated scene** featuring the sun, sky, moon, power pylon, house and a configurable central energy node. It provides configurable energy-flow colors, optional daily totals, weather/day-night effects, optional battery and EV data, and a built-in visual editor for entities and supported layout controls.
+**Sunmoon Energy is a custom Home Assistant Lovelace card that turns household energy data into an animated scene.** It visualizes solar production, home consumption, grid exchange and, when configured, battery storage and EV charging. Weather and day/night effects add context to the scene.
 
-The card reads existing Home Assistant entities. It does not install integrations, create sensors or replace the configuration of your inverter, meter, battery or EV charger.
+A built-in visual editor lets you configure entities, colors, labels, images, element sizes and positions without editing YAML by hand.
 
 ### Features
 
-- Animated energy scene with sun, moon, sky, pylon and house.
-- Configurable solar, grid-import, grid-export and home-consumption flow colors.
-- Central node styles: inverter, reactor/core, or direct flows.
-- Optional weather and day/night effects, with preview controls.
-- Optional battery and electric-vehicle data when matching entities are available.
-- Optional daily energy totals.
-- Built-in visual editor for entities, colors, labels, images, element scale and positioning.
+- Animated scene featuring the sun, sky, moon, power pylon and house.
+- Animated solar, grid import/export and home-consumption flows.
+- Live power values and optional daily energy totals.
+- Three central-node styles: inverter, reactor/core, or direct flows.
+- Weather effects for supported Home Assistant weather conditions.
+- Day/night cycle using `sun.sun` or sunrise/sunset sensors.
+- Optional battery power, state of charge and daily charge/discharge totals.
+- Optional EV charging power, state of charge and daily energy.
+- Visual editor for entities, colors, labels, images, scaling and positioning.
 
-The displayed features depend on the entities available and configured in your Home Assistant instance.
+The card reads existing Home Assistant entities. It does not create sensors or replace the integrations connected to your energy system.
 
 ### Requirements
 
 - Home Assistant with Lovelace dashboards.
-- No Python `custom_components` integration is required for the card itself.
 - Existing Home Assistant entities for the values you want to display.
-- A `weather` entity is optional. The default sun entity is `sun.sun`; alternative sunrise/sunset sensors can be configured.
+- No Python `custom_components` integration is required.
+
+### Installation with HACS
+
+1. Open HACS in Home Assistant.
+2. Select **⋮ → Custom repositories**.
+3. Enter this GitHub repository URL and select **Dashboard**.
+4. Confirm, find **Sun Moon Energy**, and install it.
+5. If required, add the resource shown by HACS as a JavaScript **Module**. The usual path is `/hacsfiles/sunmoon-energy/sunmoon-energy.js`.
+6. Refresh the dashboard and add a card of type `custom:sunmoon-energy`.
 
 ### Manual installation
 
 1. Copy `sunmoon-energy.js` to `/config/www/`.
-2. Open **Settings → Dashboards → Resources**.
-3. Add a JavaScript **Module** resource pointing to `/local/sunmoon-energy.js`.
-4. Refresh the frontend, clearing the browser cache if needed.
-5. Add a manual Lovelace card using `type: custom:sunmoon-energy`.
-
-### HACS installation
-
-1. Publish this repository on GitHub.
-2. In HACS, add the repository under **Custom repositories** and select **Dashboard** as the category.
-3. Install **Sun Moon Energy**.
-4. If needed, add the JavaScript resource using the URL shown by your HACS installation.
-5. Refresh the frontend and add the card to a dashboard.
+2. Add `/local/sunmoon-energy.js` under **Settings → Dashboards → Resources** as a JavaScript **Module**.
+3. Refresh Home Assistant.
+4. Add a manual Lovelace card with `type: custom:sunmoon-energy`.
 
 ### Minimal YAML example
 
 ```yaml
 type: custom:sunmoon-energy
-solar_power: sensor.fuori_inverter_potenza_in_ingresso
-home_power: sensor.consumo_casa
-grid_power: sensor.potenza_rete_inverted
+solar_power: sensor.solar_power
+home_power: sensor.home_power
+grid_power: sensor.grid_power
 sun_entity: sun.sun
 ```
 
-Replace the example entity IDs with your own. They are not universal IDs and are not created by the card.
+Replace the sample entity IDs with the ones available in your installation.
 
-### Entity reference
+### Entity options
 
-| Option | Purpose | Required? |
-|---|---|---|
-| `solar_power` | Instant solar/PV power | Recommended |
-| `home_power` | Instant home consumption | Recommended |
-| `grid_power` | Grid exchange power | Recommended |
-| `solar_total_today` | Solar energy produced today | Optional |
-| `grid_import_today` | Energy imported today | Optional |
-| `grid_export_today` | Energy exported today | Optional |
-| `home_total_today` | Home energy consumed today | Optional |
-| `weather_entity` | Weather entity | Optional |
-| `sun_entity` | Sun entity, usually `sun.sun` | Optional when using alternatives |
-| `sun_rising`, `sun_setting` | Sunrise/sunset sensors | Optional |
-| `battery_power`, `battery_soc` | Battery power and state of charge | Optional |
-| `car_power`, `car_soc`, `car_energy_today` | EV power, state of charge and energy | Optional |
+| Option | Description |
+|---|---|
+| `solar_power`, `home_power`, `grid_power` | Live solar, home and grid power |
+| `solar_forecast_remaining` | Remaining solar production forecast |
+| `solar_total_today`, `grid_import_today`, `grid_export_today`, `home_total_today` | Daily energy totals |
+| `weather_entity`, `sun_entity`, `sun_rising`, `sun_setting` | Weather and day/night entities |
+| `battery_power`, `battery_soc` | Battery power and state of charge |
+| `battery_charge_today`, `battery_discharge_today` | Daily battery charge/discharge energy |
+| `car_power`, `car_soc`, `car_energy_today` | EV charging power, state of charge and daily energy |
+| `hub_entity` | Power entity associated with the central node |
 
-Check the units and sign convention of your sensors. Power is commonly reported in W and energy in kWh, but this depends on the integration.
+Power is commonly measured in W and energy in kWh, but actual units depend on your integrations. Check sensor units and sign conventions. Use `grid_invert` or `battery_invert` if the corresponding flow direction is reversed.
 
 ### Troubleshooting
 
-- **Card type not found:** check the resource URL, module type and file location, then refresh the browser cache.
-- **Missing values:** verify entity IDs and states in Developer Tools.
-- **Reversed grid flow:** check the sensor's sign convention and the grid inversion setting.
-- **Missing weather/day-night effects:** check the configured weather and sun entities.
-- **Changes not appearing:** force-refresh the frontend and inspect the browser console.
+- **Custom element not found:** check the JavaScript file location, resource URL and Module type; then refresh the browser cache.
+- **Missing values:** verify entity IDs and numeric states in Developer Tools.
+- **Reversed grid or battery flow:** check the integration's sign convention and the relevant inversion option.
+- **Weather/day-night effects missing:** verify the configured weather and sun entities.
+- **Changes not visible:** force-refresh the dashboard and inspect the browser console.
 
 ### License
 
-A license has not yet been included. The author should choose and add a license before the repository is considered ready for public reuse or redistribution.
+See the repository's `LICENSE` file for the applicable terms.
+
+---
+
+<p align="center"><strong>Sunmoon Energy Card · Home Assistant</strong></p>
